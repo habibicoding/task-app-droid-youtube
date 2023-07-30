@@ -1,16 +1,20 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'androidx.navigation.safeargs.kotlin'
+    id "kotlin-parcelize"
+    id 'kotlin-kapt'
+    id 'dagger.hilt.android.plugin'
 }
 
 android {
     namespace 'com.example.task_app_droid_youtube'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.example.task_app_droid_youtube"
         minSdk 25
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -24,21 +28,79 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
+    }
+    buildFeatures {
+        viewBinding true
+        dataBinding true
     }
 }
 
 dependencies {
-
-    implementation 'androidx.core:core-ktx:1.8.0'
+    // General
+    implementation "androidx.core:core-ktx:$core_ktx_version"
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.5.0'
+    implementation "com.google.android.material:material:$material_version"
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
+    implementation 'com.github.xabaras:RecyclerViewSwipeDecorator:1.4'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation "androidx.legacy:legacy-support-v4:$legacy_support_v4_version"
+
+    // Navigation
+    implementation "androidx.navigation:navigation-fragment-ktx:$navigation_component_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$navigation_component_version"
+
+    // Timber Log
+    implementation "com.jakewharton.timber:timber:$timber_version"
+
+    // Coroutines
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_verion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_verion"
+
+    // Retrofit 2
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.5.0'
+    implementation "com.squareup.retrofit2:converter-scalars:$retrofit_version"
+    implementation 'com.google.code.gson:gson:2.9.1'
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
+
+    // Epoxy
+    implementation "com.airbnb.android:epoxy:4.6.2"
+    implementation "com.airbnb.android:epoxy-databinding:4.6.2"
+    implementation 'androidx.core:core-ktx:1.10.1'
+    // Add the annotation processor if you are using Epoxy's annotations (recommended)
+    kapt "com.airbnb.android:epoxy-processor:4.6.2"
+
+    // Facebook Shimmer Layout
+    implementation 'com.facebook.shimmer:shimmer:0.1.0@aar'
+
+    // Dependency Injection Dagger Hilt
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    kapt "com.google.dagger:hilt-compiler:$hilt_version"
+
+    // Unit-Testing
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.7.2'
+    testImplementation "androidx.arch.core:core-testing:2.2.0"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4"
+    testImplementation "io.mockk:mockk:$mockk_version"
+
+    // Espresso
+    androidTestImplementation "androidx.test.ext:junit:$android_test_junit_version"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:$espresso_version"
+    debugImplementation "androidx.fragment:fragment-testing:$fragment_testing_version"
+}
+
+kapt {
+    correctErrorTypes true
 }
