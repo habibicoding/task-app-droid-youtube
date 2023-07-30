@@ -33,6 +33,7 @@ class TaskViewModelImpl @Inject constructor(
     val isDeleteSuccessful: LiveData<Boolean>
         get() = _isDeleteSuccessful
 
+
     override fun fetchTasks(status: String?) {
         _tasks.postValue(ViewState.Loading)
         viewModelScope.launch {

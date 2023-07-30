@@ -6,7 +6,8 @@ abstract class BaseRepository {
         private const val BAD_REQUEST = "Bad Request"
         private const val UNAUTHORIZED = "Unauthorized"
         private const val NOT_FOUND = "Not found"
-        const val SOMETHING_WRONG = "Something went wrong"
+        private const val SOMETHING_WRONG = "Something went wrong"
+
 
         fun <T : Any> handleSuccess(data: T): ViewState<T> {
             return ViewState.Success(data)
