@@ -5,16 +5,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.task_app_droid_youtube.R
 import com.example.task_app_droid_youtube.core.ViewBindingFragment
+import com.example.task_app_droid_youtube.core.ViewState
 import com.example.task_app_droid_youtube.databinding.FragmentTaskBinding
 import com.example.task_app_droid_youtube.model.TaskFetchResponse
 import com.example.task_app_droid_youtube.ui.view.SwipeGestures
 import com.example.task_app_droid_youtube.ui.view.epoxy.TaskEpoxyController
 import com.example.task_app_droid_youtube.util.displayAlertDialog
+import com.example.task_app_droid_youtube.util.showToastMessage
 import com.example.task_app_droid_youtube.viewmodel.TaskViewModelImpl
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -78,5 +81,75 @@ abstract class TaskFragment : ViewBindingFragment<FragmentTaskBinding>(),
         }
         val touchHelper = ItemTouchHelper(swipeGestures)
         touchHelper.attachToRecyclerView(binding.recyclerView)
+    }
+
+    private fun setupSwipeRefresh() {
+        binding.swipeRefresh.let {
+            it.setOnRefreshListener(this)
+            it.setColorSchemeResources(R.color.purple_200)
+        }
+    }
+
+    private fun setupRecyclerView() {
+        binding.recyclerView.apply {
+            this.setHasFixedSize(true)
+            this.itemAnimator = DefaultItemAnimator()
+            this.adapter = controller.adapter
+        }
+    }
+
+    private fun observeTaskLiveData() {
+        viewModel.tasks.observe(viewLifecycleOwner) { response ->
+            when (response) {
+                is ViewState.Loading -> {
+                    binding.recyclerView.visibility = View.GONE
+                    binding.shimmerFrame.startShimmerAnimation()
+                }
+
+                is ViewState.Success -> {
+                    this.tasks.clear()
+                    if (response.data.isEmpty()) {
+                        showEmptyScreen()
+                    } else {
+                        showArticlesOnScreen()
+                    }
+                    val fetchedTasks = response.data.map { task ->
+                        task.onClick = View.OnClickListener { navigateToTaskDetail(task) }
+                        task
+                    }
+                    this.tasks.addAll(fetchedTasks)
+                    this.controller.setTasks(this.tasks)
+                    if (controller.getNumberOfTasks() == 0) {
+                        showToastMessage(requireContext(), getString(R.string.no_tasks_found))
+                    }
+                }
+
+                is ViewState.Error -> {
+                    showEmptyScreen()
+                }
+            }
+        }
+    }
+
+    private fun showEmptyScreen() {
+        with(binding) {
+            shimmerFrame.stopShimmerAnimation()
+            shimmerFrame.visibility = View.GONE
+            recyclerView.visibility = View.GONE
+            emptyText.visibility = View.VISIBLE
+            retryFetchButton.visibility = View.VISIBLE
+        }
+        controller.setTasks(emptyList())
+    }
+
+    private fun showArticlesOnScreen() {
+        with(binding) {
+            shimmerFrame.stopShimmerAnimation()
+            shimmerFrame.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
+            emptyText.visibility = View.GONE
+            retryFetchButton.visibility = View.GONE
+            swipeRefresh.isRefreshing = false
+        }
     }
 }
