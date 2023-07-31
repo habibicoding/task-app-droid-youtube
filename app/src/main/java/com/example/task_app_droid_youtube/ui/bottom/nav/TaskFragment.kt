@@ -21,6 +21,7 @@ import com.example.task_app_droid_youtube.util.showToastMessage
 import com.example.task_app_droid_youtube.viewmodel.TaskViewModelImpl
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import timber.log.Timber
 
 @ExperimentalCoroutinesApi
 @AndroidEntryPoint
@@ -84,9 +85,9 @@ abstract class TaskFragment : ViewBindingFragment<FragmentTaskBinding>(),
     }
 
     private fun setupSwipeRefresh() {
-        binding.swipeRefresh.let {
-            it.setOnRefreshListener(this)
-            it.setColorSchemeResources(R.color.purple_200)
+        binding.swipeRefresh.apply {
+            this.setOnRefreshListener(this@TaskFragment)
+            this.setColorSchemeResources(R.color.purple_200)
         }
     }
 
@@ -114,7 +115,7 @@ abstract class TaskFragment : ViewBindingFragment<FragmentTaskBinding>(),
                         showArticlesOnScreen()
                     }
                     val fetchedTasks = response.data.map { task ->
-                        task.onClick = View.OnClickListener { navigateToTaskDetail(task) }
+                        task.onClick = View.OnClickListener { navigateToDetailTask(task) }
                         task
                     }
                     this.tasks.addAll(fetchedTasks)
@@ -150,6 +151,30 @@ abstract class TaskFragment : ViewBindingFragment<FragmentTaskBinding>(),
             emptyText.visibility = View.GONE
             retryFetchButton.visibility = View.GONE
             swipeRefresh.isRefreshing = false
+        }
+    }
+
+    private fun observeDeleteTaskLiveData() {
+        viewModel.isDeleteSuccessful.observe(viewLifecycleOwner) { isSuccessful ->
+            if (isSuccessful) {
+                showToastMessage(requireContext(), getString(R.string.task_request_success_message))
+                callViewModel()
+            } else {
+                showToastMessage(requireContext(), getString(R.string.task_request_failure_message))
+                Timber.d("Delete status: $isSuccessful")
+            }
+        }
+    }
+
+    private fun clickOnRetry() {
+        with(binding) {
+            retryFetchButton.setOnClickListener { button ->
+                button.visibility = View.GONE
+                emptyText.visibility = View.GONE
+                shimmerFrame.visibility = View.VISIBLE
+                shimmerFrame.startShimmerAnimation()
+                callViewModel()
+            }
         }
     }
 }
