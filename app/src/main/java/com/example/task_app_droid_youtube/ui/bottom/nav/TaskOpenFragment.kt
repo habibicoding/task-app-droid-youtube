@@ -3,6 +3,7 @@ package com.example.task_app_droid_youtube.ui.bottom.nav
 import android.os.Bundle
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.navigation.fragment.findNavController
 import com.example.task_app_droid_youtube.R
 import com.example.task_app_droid_youtube.model.TaskFetchResponse
 import com.example.task_app_droid_youtube.model.TaskStatus
@@ -34,14 +35,19 @@ class TaskOpenFragment : TaskFragment() {
     }
 
     override fun navigateToEditTask(task: TaskFetchResponse) {
-        TODO("Not yet implemented")
+        val action = TaskOpenFragmentDirections.actionOpenTaskToTaskEdit(task)
+        findNavController().navigate(action)
     }
 
     override fun navigateToDetailTask(task: TaskFetchResponse) {
-        TODO("Not yet implemented")
+        val action = TaskOpenFragmentDirections.actionTaskOpenToTaskDetail(task.id)
+        findNavController().navigate(action)
     }
 
     private fun setUpCreateTaskButton() {
-        TODO("Not yet implemented")
+        binding.fabBtn.setOnClickListener {
+            val action = TaskOpenFragmentDirections.actionOpenTaskToTaskCreate()
+            findNavController().navigate(action)
+        }
     }
 }
