@@ -74,6 +74,4 @@ class TaskEditFragment : ViewBindingFragment<FragmentEditTaskBinding>() {
             else -> binding.priorityHigh.isChecked = true
         }
     }
-
-
 }
