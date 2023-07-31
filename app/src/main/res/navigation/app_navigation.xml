@@ -1,6 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/app_navigation">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/app_navigation"
+    app:startDestination="@id/task_open_fragment">
+
+    <fragment
+        android:id="@+id/task_open_fragment"
+        android:name="com.example.task_app_droid_youtube.ui.bottom.nav.TaskOpenFragment"
+        android:label="@string/open_tasks"
+        tools:layout="@layout/fragment_task">
+
+        <action
+            android:id="@+id/action_task_open_to_task_detail"
+            app:destination="@+id/task_detail_fragment"
+            app:popUpTo="@id/task_open_fragment"
+            app:popUpToInclusive="false" />
+
+        <action
+            android:id="@+id/action_open_task_to_task_create"
+            app:destination="@+id/task_create_fragment"
+            app:popUpTo="@id/task_open_fragment"
+            app:popUpToInclusive="false" />
+
+        <action
+            android:id="@+id/action_open_task_to_task_edit"
+            app:destination="@+id/task_edit_fragment"
+            app:popUpTo="@id/task_open_fragment"
+            app:popUpToInclusive="false" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/task_closed_fragment"
+        android:name="com.example.task_app_droid_youtube.ui.bottom.nav.TaskClosedFragment"
+        android:label="@string/closed_tasks"
+        tools:layout="@layout/fragment_task">
+
+        <action
+            android:id="@+id/action_task_closed_to_task_detail"
+            app:destination="@+id/task_detail_fragment"
+            app:popUpTo="@id/task_closed_fragment"
+            app:popUpToInclusive="false" />
+
+        <action
+            android:id="@+id/action_task_closed_to_task_edit"
+            app:destination="@+id/task_edit_fragment"
+            app:popUpTo="@id/task_closed_fragment"
+            app:popUpToInclusive="false" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/task_all_fragment"
+        android:name="com.example.task_app_droid_youtube.ui.bottom.nav.TaskAllFragment"
+        android:label="@string/all_tasks"
+        tools:layout="@layout/fragment_task">
+
+        <action
+            android:id="@+id/action_task_all_to_task_detail"
+            app:destination="@+id/task_detail_fragment"
+            app:popUpTo="@id/task_all_fragment"
+            app:popUpToInclusive="false" />
+
+        <action
+            android:id="@+id/action_task_all_to_task_edit"
+            app:destination="@+id/task_edit_fragment"
+            app:popUpTo="@id/task_all_fragment"
+            app:popUpToInclusive="false" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/task_create_fragment"
+        android:name="com.example.task_app_droid_youtube.ui.TaskCreateFragment"
+        android:label="@string/create_task"
+        tools:layout="@layout/fragment_create_task" />
+
+    <fragment
+        android:id="@+id/task_detail_fragment"
+        android:name="com.example.task_app_droid_youtube.ui.TaskDetailFragment"
+        android:label="@string/task_detail"
+        tools:layout="@layout/fragment_detail_task">
+
+        <action
+            android:id="@+id/action_task_detail_to_task_edit"
+            app:destination="@+id/task_edit_fragment"
+            app:popUpTo="@id/task_detail_fragment"
+            app:popUpToInclusive="false" />
+
+        <argument
+            android:name="task_id"
+            app:argType="long" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/task_edit_fragment"
+        android:name="com.example.task_app_droid_youtube.ui.TaskEditFragment"
+        android:label="@string/task_detail_edit_task"
+        tools:layout="@layout/fragment_edit_task">
+
+        <action
+            android:id="@+id/action_task_edit_to_task_detail"
+            app:destination="@id/task_detail_fragment"
+            app:popUpTo="@id/task_edit_fragment"
+            app:popUpToInclusive="true" />
+
+        <argument
+            android:name="task_item"
+            app:argType="com.example.task_app_droid_youtube.model.TaskFetchResponse" />
+
+    </fragment>
 
 </navigation>
