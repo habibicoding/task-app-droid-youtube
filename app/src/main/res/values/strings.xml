@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">task-app-droid-mediumcom</string>
+    <string name="app_name">Task App</string>
     <string name="created_on_text">"Created on: %s"</string>
     <string name="reminder_text">Reminder: %s</string>
     <string name="priority_text">Priority: %s</string>
