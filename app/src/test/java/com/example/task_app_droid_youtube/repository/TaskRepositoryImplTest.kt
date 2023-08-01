@@ -35,7 +35,7 @@ internal class TaskRepositoryImplTest : BaseRepositoryTest() {
 
     private val gsonBuilder = GsonBuilder().create()
 
-    private val exception = Exception("error triggered")
+    private val customException = Exception("error triggered")
 
     private val createRequest = TaskCreateRequest(
         description = "Buy Hummus",
@@ -107,7 +107,7 @@ internal class TaskRepositoryImplTest : BaseRepositoryTest() {
     @Test
     fun `when fetch request for task by id then check for unknown exception`() {
         // given
-        coEvery { mockRepository.getTaskById(any()) } throws exception
+        coEvery { mockRepository.getTaskById(any()) } throws customException
 
         runBlocking {
             // when
@@ -116,7 +116,60 @@ internal class TaskRepositoryImplTest : BaseRepositoryTest() {
             //then
             assertTrue(actualResult is ViewState.Error)
             val actualMessage = (actualResult as ViewState.Error).exception.message
-            assertEquals(exception.message, actualMessage)
+            assertEquals(customException.message, actualMessage)
+        }
+    }
+
+    @Test
+    fun `when task post request then check for success response`() {
+        // given
+        val json = getJsonString<TaskFetchResponse>(TASK_POST_REQUEST)
+        val gson = Gson()
+        val expectedTask: TaskFetchResponse = gson.fromJson(json, TaskFetchResponse::class.java)
+        mockWebServer.enqueue(MockResponse().setBody(FileReader(TASK_POST_REQUEST).content))
+
+        runBlocking {
+            // when
+            val actualTask: TaskFetchResponse? =
+                objectUnderTest.createTask(createRequest).extractData
+
+            // then
+            assertEquals(expectedTask, actualTask)
+        }
+    }
+
+
+    @Test
+    fun `when task post request then check for http exception`() {
+        // given
+        mockWebServer.enqueue(MockResponse().setResponseCode(INTERNAL_SERVER_ERROR))
+
+        runBlocking {
+            // when
+            val actualResult: ViewState<TaskFetchResponse> =
+                objectUnderTest.createTask(createRequest)
+
+            // then
+            assertTrue(actualResult is ViewState.Error)
+            val actualMessage = (actualResult as ViewState.Error).exception.message
+            assertEquals(SOMETHING_WRONG, actualMessage)
+        }
+    }
+
+    @Test
+    fun `when task post request then check for unknown exception`() {
+        // given
+        coEvery { mockRepository.createTask(any()) } throws customException
+
+        runBlocking {
+            // when
+            val actualResult: ViewState<TaskFetchResponse> =
+                mockRepository.createTask(createRequest)
+
+            // then
+            assertTrue(actualResult is ViewState.Error)
+            val actualMessage = (actualResult as ViewState.Error).exception.message
+            assertEquals(customException.message, actualMessage)
         }
     }
 }
