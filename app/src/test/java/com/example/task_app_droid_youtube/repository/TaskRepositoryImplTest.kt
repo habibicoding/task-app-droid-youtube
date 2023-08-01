@@ -1,15 +1,26 @@
 package com.example.task_app_droid_youtube.repository
 
 import com.example.task_app_droid_youtube.BaseRepositoryTest
+import com.example.task_app_droid_youtube.FileReader
+import com.example.task_app_droid_youtube.core.ViewState
 import com.example.task_app_droid_youtube.model.Priority
 import com.example.task_app_droid_youtube.model.TaskCreateRequest
+import com.example.task_app_droid_youtube.model.TaskFetchResponse
 import com.example.task_app_droid_youtube.model.TaskUpdateRequest
 import com.example.task_app_droid_youtube.networking.TaskApi
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
+import okhttp3.mockwebserver.MockResponse
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
 
 internal class TaskRepositoryImplTest : BaseRepositoryTest() {
 
@@ -19,9 +30,10 @@ internal class TaskRepositoryImplTest : BaseRepositoryTest() {
         private const val TASK_POST_REQUEST = "post_request_task.json"
         private const val TASK_PATCH_REQUEST = "patch_request_task.json"
         private const val INTERNAL_SERVER_ERROR: Int = 500
+        private const val SOMETHING_WRONG = "Something went wrong"
     }
 
-    private val gson = GsonBuilder().create()
+    private val gsonBuilder = GsonBuilder().create()
 
     private val exception = Exception("error triggered")
 
@@ -45,13 +57,14 @@ internal class TaskRepositoryImplTest : BaseRepositoryTest() {
     private val mockTaskApi = mockk<TaskApi>()
     private val mockRepository = TaskRepositoryImpl(mockTaskApi)
 
+    @Before
     override fun setUp() {
         super.setUp()
 
         taskApi = Retrofit.Builder()
             .baseUrl(mockWebServer.url("/"))
             .addConverterFactory(ScalarsConverterFactory.create())
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .addConverterFactory(GsonConverterFactory.create(gsonBuilder))
             .build()
             .create(TaskApi::class.java)
 
@@ -59,4 +72,51 @@ internal class TaskRepositoryImplTest : BaseRepositoryTest() {
     }
 
 
+    @Test
+    fun `when fetch request for task by id then check for success response`() {
+        // given
+        val json = getJsonString<TaskFetchResponse>(TASK_BY_ID_RESPONSE)
+        val gson = Gson()
+        val expectedTask: TaskFetchResponse = gson.fromJson(json, TaskFetchResponse::class.java)
+        mockWebServer.enqueue(MockResponse().setBody(FileReader(TASK_BY_ID_RESPONSE).content))
+
+        runBlocking {
+            // when
+            val actualTask: TaskFetchResponse? = objectUnderTest.getTaskById("1").extractData
+            // then
+            assertEquals(expectedTask, actualTask)
+        }
+    }
+
+    @Test
+    fun `when fetch request for task by id then check for http exception`() {
+        // given
+        mockWebServer.enqueue(MockResponse().setResponseCode(INTERNAL_SERVER_ERROR))
+
+        runBlocking {
+            // when
+            val actualResult: ViewState<TaskFetchResponse> = objectUnderTest.getTaskById("12")
+
+            // then
+            assertTrue(actualResult is ViewState.Error)
+            val actualMessage = (actualResult as ViewState.Error).exception.message
+            assertEquals(SOMETHING_WRONG, actualMessage)
+        }
+    }
+
+    @Test
+    fun `when fetch request for task by id then check for unknown exception`() {
+        // given
+        coEvery { mockRepository.getTaskById(any()) } throws exception
+
+        runBlocking {
+            // when
+            val actualResult: ViewState<TaskFetchResponse> = mockRepository.getTaskById("111")
+
+            //then
+            assertTrue(actualResult is ViewState.Error)
+            val actualMessage = (actualResult as ViewState.Error).exception.message
+            assertEquals(exception.message, actualMessage)
+        }
+    }
 }
