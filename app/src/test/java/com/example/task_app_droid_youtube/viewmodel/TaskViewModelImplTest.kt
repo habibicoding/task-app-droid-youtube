@@ -11,12 +11,16 @@ import com.example.task_app_droid_youtube.model.TaskFetchResponse
 import com.example.task_app_droid_youtube.model.TaskUpdateRequest
 import com.example.task_app_droid_youtube.repository.TaskRepository
 import io.mockk.MockKAnnotations
+import io.mockk.coEvery
+import io.mockk.confirmVerified
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.TestRule
 
 
@@ -83,4 +87,49 @@ internal class TaskViewModelImplTest {
     }
 
 
+    @Test
+    fun `when calling for task by id then expect loading state`() {
+        // given
+        coEvery { mockRepository.getTaskById(any()) } returns ViewState.Loading
+        objectUnderTest.task.observeForever(responseObserver)
+
+        // when
+        objectUnderTest.fetchTaskById("22")
+
+        // then
+        verify { responseObserver.onChanged(ViewState.Loading) }
+        confirmVerified(responseObserver)
+    }
+
+    @Test
+    fun `when calling for task by id then expect success state`() {
+        // given
+        coEvery { mockRepository.getTaskById(any()) } returns ViewState.Success(fetchResponse)
+        objectUnderTest.task.observeForever(responseObserver)
+
+        // when
+        objectUnderTest.fetchTaskById("1044")
+
+        verify {
+            responseObserver.onChanged(ViewState.Loading)
+            responseObserver.onChanged(ViewState.Success(fetchResponse))
+        }
+        confirmVerified(responseObserver)
+    }
+
+    @Test
+    fun `when calling for task by id then expect error state`() {
+        // given
+        coEvery { mockRepository.getTaskById(any()) } returns ViewState.Error(mockHttpException)
+        objectUnderTest.task.observeForever(responseObserver)
+
+        // when
+        objectUnderTest.fetchTaskById("999")
+
+        verify {
+            responseObserver.onChanged(ViewState.Loading)
+            responseObserver.onChanged(ViewState.Error(mockHttpException))
+        }
+        confirmVerified(responseObserver)
+    }
 }
