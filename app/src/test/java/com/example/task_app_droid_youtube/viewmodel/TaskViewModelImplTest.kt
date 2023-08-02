@@ -16,12 +16,14 @@ import io.mockk.confirmVerified
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
+import retrofit2.Response
 
 
 @ExperimentalCoroutinesApi
@@ -157,7 +159,7 @@ internal class TaskViewModelImplTest {
         objectUnderTest.createTask(createRequest)
 
         // then
-        verify {
+        verifyOrder {
             responseObserver.onChanged(ViewState.Loading)
             responseObserver.onChanged(ViewState.Success(fetchResponse))
         }
@@ -174,10 +176,141 @@ internal class TaskViewModelImplTest {
         objectUnderTest.createTask(createRequest)
 
         // then
-        verify {
+        verifyOrder {
             responseObserver.onChanged(ViewState.Loading)
             responseObserver.onChanged(ViewState.Error(mockHttpException))
         }
         confirmVerified(responseObserver)
+    }
+
+    @Test
+    fun `when calling for task list then expect loading state`() {
+        // given
+        coEvery { mockRepository.getTasks(null) } returns ViewState.Loading
+        objectUnderTest.tasks.observeForever(responseObservers)
+
+        // when
+        objectUnderTest.fetchTasks(null)
+
+        // then
+        verify { responseObservers.onChanged(ViewState.Loading) }
+        confirmVerified(responseObservers)
+    }
+
+    @Test
+    fun `when fetching task list then expect a successful response`() {
+        // given
+        val expectedResponse = ArrayList<TaskFetchResponse>()
+        coEvery { mockRepository.getTasks(null) } returns ViewState.Success(expectedResponse)
+        objectUnderTest.tasks.observeForever(responseObservers)
+
+        // when
+        objectUnderTest.fetchTasks(null)
+
+        // then
+        verifyOrder {
+            responseObservers.onChanged(ViewState.Loading)
+            responseObservers.onChanged(ViewState.Success(expectedResponse))
+        }
+        confirmVerified(responseObservers)
+    }
+
+    @Test
+    fun `when fetching task list then expect an http exception`() {
+        // given
+        coEvery { mockRepository.getTasks(null) } returns ViewState.Error(mockHttpException)
+        objectUnderTest.tasks.observeForever(responseObservers)
+
+        // when
+        objectUnderTest.fetchTasks(null)
+
+        // then
+        verifyOrder {
+            responseObservers.onChanged(ViewState.Loading)
+            responseObservers.onChanged(ViewState.Error(mockHttpException))
+        }
+        confirmVerified(responseObservers)
+    }
+
+    @Test
+    fun `when calling update task then expect loading state`() {
+        // given
+        coEvery { mockRepository.updateTask(any(), any()) } returns ViewState.Loading
+        objectUnderTest.task.observeForever(responseObserver)
+
+        // when
+        objectUnderTest.updateTask("3", updateRequest)
+
+        // then
+        verify { responseObserver.onChanged(ViewState.Loading) }
+        confirmVerified(responseObserver)
+    }
+
+    @Test
+    fun `when calling update task then expect successful response`() {
+        // given
+        coEvery { mockRepository.updateTask(any(), any()) } returns ViewState.Success(fetchResponse)
+        objectUnderTest.task.observeForever(responseObserver)
+
+        // when
+        objectUnderTest.updateTask("1", updateRequest)
+
+        // then
+        verifyOrder {
+            responseObserver.onChanged(ViewState.Loading)
+            responseObserver.onChanged(ViewState.Success(fetchResponse))
+        }
+        confirmVerified(responseObserver)
+    }
+
+    @Test
+    fun `when calling update task then expect an http exception`() {
+        // given
+        coEvery { mockRepository.updateTask(any(), any()) } returns ViewState.Error(
+            mockHttpException
+        )
+        objectUnderTest.task.observeForever(responseObserver)
+
+        // when
+        objectUnderTest.updateTask("1", updateRequest)
+
+        // then
+        verifyOrder {
+            responseObserver.onChanged(ViewState.Loading)
+            responseObserver.onChanged(ViewState.Error(mockHttpException))
+        }
+        confirmVerified(responseObserver)
+    }
+
+    @Test
+    fun `when calling delete task then expect successful response`() {
+        // given
+        val isSuccess = Response.success(true)
+        coEvery { mockRepository.canDeleteTask(any()) } returns ViewState.Success(isSuccess)
+        objectUnderTest.isDeleteSuccessful.observeForever(responseObserverDelete)
+
+        // when
+        objectUnderTest.deleteTask("4")
+
+
+        // then
+        verifyOrder { responseObserverDelete.onChanged(true) }
+        confirmVerified(responseObserverDelete)
+    }
+
+    @Test
+    fun `when calling delete task then expect http exception`() {
+        // given
+        coEvery { mockRepository.canDeleteTask(any()) } returns ViewState.Error(mockHttpException)
+        objectUnderTest.isDeleteSuccessful.observeForever(responseObserverDelete)
+
+        // when
+        objectUnderTest.deleteTask("9")
+
+        // then
+        verifyOrder {
+            responseObserverDelete.onChanged(false)
+        }
+        confirmVerified(responseObserverDelete)
     }
 }
