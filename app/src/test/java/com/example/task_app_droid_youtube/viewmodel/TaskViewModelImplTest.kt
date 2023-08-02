@@ -132,4 +132,52 @@ internal class TaskViewModelImplTest {
         }
         confirmVerified(responseObserver)
     }
+
+    @Test
+    fun `when creating a task then expect loading state`() {
+        // given
+        coEvery { mockRepository.createTask(any()) } returns ViewState.Loading
+        objectUnderTest.task.observeForever(responseObserver)
+
+        // when
+        objectUnderTest.createTask(createRequest)
+
+        // then
+        verify { responseObserver.onChanged(ViewState.Loading) }
+        confirmVerified(responseObserver)
+    }
+
+    @Test
+    fun `when creating a task then expect success state`() {
+        // given
+        coEvery { mockRepository.createTask(any()) } returns ViewState.Success(fetchResponse)
+        objectUnderTest.task.observeForever(responseObserver)
+
+        // when
+        objectUnderTest.createTask(createRequest)
+
+        // then
+        verify {
+            responseObserver.onChanged(ViewState.Loading)
+            responseObserver.onChanged(ViewState.Success(fetchResponse))
+        }
+        confirmVerified(responseObserver)
+    }
+
+    @Test
+    fun `when creating a task then expect error state`() {
+        // given
+        coEvery { mockRepository.createTask(any()) } returns ViewState.Error(mockHttpException)
+        objectUnderTest.task.observeForever(responseObserver)
+
+        // when
+        objectUnderTest.createTask(createRequest)
+
+        // then
+        verify {
+            responseObserver.onChanged(ViewState.Loading)
+            responseObserver.onChanged(ViewState.Error(mockHttpException))
+        }
+        confirmVerified(responseObserver)
+    }
 }
